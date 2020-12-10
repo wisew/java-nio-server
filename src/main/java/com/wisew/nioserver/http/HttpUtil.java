@@ -1,10 +1,7 @@
-package com.jenkov.nioserver.http;
+package com.wisew.nioserver.http;
 
 import java.io.UnsupportedEncodingException;
 
-/**
- * Created by jjenkov on 19-10-2015.
- */
 public class HttpUtil {
 
     private static final byte[] GET    = new byte[]{'G','E','T'};
@@ -18,14 +15,6 @@ public class HttpUtil {
 
     public static int parseHttpRequest(byte[] src, int startIndex, int endIndex, HttpHeaders httpHeaders){
 
-
-        /*
-        int endOfHttpMethod = findNext(src, startIndex, endIndex, (byte) ' ');
-        if(endOfHttpMethod == -1) return false;
-        resolveHttpMethod(src, startIndex, httpHeaders);
-        */
-
-        //parse HTTP request line
         int endOfFirstLine = findNextLineBreak(src, startIndex, endIndex);
         if(endOfFirstLine == -1) return -1;
 

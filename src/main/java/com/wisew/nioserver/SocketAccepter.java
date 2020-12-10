@@ -1,15 +1,11 @@
-package com.jenkov.nioserver;
+package com.wisew.nioserver;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
 
-/**
- * Created by jjenkov on 19-10-2015.
- */
 public class SocketAccepter implements Runnable{
 
     private int tcpPort = 0;
@@ -23,7 +19,7 @@ public class SocketAccepter implements Runnable{
     }
 
 
-
+    @Override
     public void run() {
         try{
             this.serverSocket = ServerSocketChannel.open();

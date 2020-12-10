@@ -1,24 +1,21 @@
-package com.jenkov.nioserver;
+package com.wisew.nioserver;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by jjenkov on 21-10-2015.
- */
 public class MessageWriter {
 
-    private List<Message> writeQueue   = new ArrayList<>();
-    private Message  messageInProgress = null;
-    private int      bytesWritten      =    0;
+    private List<Message> writeQueue = new ArrayList<>();
+    private Message messageInProgress = null;
+    private int bytesWritten = 0;
 
     public MessageWriter() {
     }
 
     public void enqueue(Message message) {
-        if(this.messageInProgress == null){
+        if (this.messageInProgress == null) {
             this.messageInProgress = message;
         } else {
             this.writeQueue.add(message);
@@ -32,8 +29,8 @@ public class MessageWriter {
         this.bytesWritten += socket.write(byteBuffer);
         byteBuffer.clear();
 
-        if(bytesWritten >= this.messageInProgress.length){
-            if(this.writeQueue.size() > 0){
+        if (bytesWritten >= this.messageInProgress.length) {
+            if (this.writeQueue.size() > 0) {
                 this.messageInProgress = this.writeQueue.remove(0);
             } else {
                 this.messageInProgress = null;

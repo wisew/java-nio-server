@@ -1,13 +1,9 @@
-package com.jenkov.nioserver;
+package com.wisew.nioserver;
 
 /**
- * Same as QueueFillCount, except that QueueFlip uses a flip flag to keep track of when the internal writePos has
- * "overflowed" (meaning it goes back to 0). Other than that, the two implementations are very similar in functionality.
- *
- * One additional difference is that QueueFlip has an available() method, where this is a public variable in
- * QueueFillCount.
- *
- * Created by jjenkov on 18-09-2015.
+ * 类似循环队列功能，尾部写满后继续从头部写入，flipped进行翻转判断
+ * flipped == false代表write指针在read指针之后
+ * 每个方法需要注意及时修改flipped
  */
 public class QueueIntFlip {
 
@@ -20,7 +16,8 @@ public class QueueIntFlip {
 
     public QueueIntFlip(int capacity) {
         this.capacity = capacity;
-        this.elements = new int[capacity]; //todo get from TypeAllocator ?
+        //todo 考虑添加TypeAllocator
+        this.elements = new int[capacity];
     }
 
     public void reset() {
@@ -29,6 +26,7 @@ public class QueueIntFlip {
         this.flipped  = false;
     }
 
+    // 记录还有多少个元素可读
     public int available() {
         if(!flipped){
             return writePos - readPos;
@@ -36,6 +34,7 @@ public class QueueIntFlip {
         return capacity - readPos + writePos;
     }
 
+    // 剩余的写入空间大小
     public int remainingCapacity() {
         if(!flipped){
             return capacity - writePos;
@@ -43,6 +42,7 @@ public class QueueIntFlip {
         return readPos - writePos;
     }
 
+    // 能否写入一条数据
     public boolean put(int element){
         if(!flipped){
             if(writePos == capacity){
@@ -69,24 +69,19 @@ public class QueueIntFlip {
         }
     }
 
+    // 写入新的数据，返回写入长度
     public int put(int[] newElements, int length){
         int newElementsReadPos = 0;
         if(!flipped){
-            //readPos lower than writePos - free sections are:
-            //1) from writePos to capacity
-            //2) from 0 to readPos
 
+            // 尾部足够写入所有的数据
             if(length <= capacity - writePos){
-                //new elements fit into top of elements array - copy directly
                 for(; newElementsReadPos < length; newElementsReadPos++){
                     this.elements[this.writePos++] = newElements[newElementsReadPos];
                 }
 
                 return newElementsReadPos;
             } else {
-                //new elements must be divided between top and bottom of elements array
-
-                //writing to top
                 for(;this.writePos < capacity; this.writePos++){
                     this.elements[this.writePos] = newElements[newElementsReadPos++];
                 }
@@ -94,6 +89,7 @@ public class QueueIntFlip {
                 //writing to bottom
                 this.writePos = 0;
                 this.flipped  = true;
+                // 可能出现不够写入的情况
                 int endPos = Math.min(this.readPos, length - newElementsReadPos);
                 for(; this.writePos < endPos; this.writePos++){
                     this.elements[writePos] = newElements[newElementsReadPos++];
@@ -104,9 +100,6 @@ public class QueueIntFlip {
             }
 
         } else {
-            //readPos higher than writePos - free sections are:
-            //1) from writePos to readPos
-
             int endPos = Math.min(this.readPos, this.writePos + length);
 
             for(; this.writePos < endPos; this.writePos++){
@@ -117,12 +110,13 @@ public class QueueIntFlip {
         }
     }
 
-
+    // 获取当前正在读取的值 or -1
     public int take() {
         if(!flipped){
             if(readPos < writePos){
                 return elements[readPos++];
             } else {
+                // 还未有任何写入或者写入的都被读过了
                 return -1;
             }
         } else {
@@ -141,38 +135,32 @@ public class QueueIntFlip {
         }
     }
 
+    // 返回实际读取的元素个数
     public int take(int[] into, int length){
         int intoWritePos = 0;
         if(!flipped){
-            //writePos higher than readPos - available section is writePos - readPos
-
             int endPos = Math.min(this.writePos, this.readPos + length);
             for(; this.readPos < endPos; this.readPos++){
                 into[intoWritePos++] = this.elements[this.readPos];
             }
+            // intoWritePos < length代表into[]未读满
             return intoWritePos;
         } else {
-            //readPos higher than writePos - available sections are top + bottom of elements array
 
             if(length <= capacity - readPos){
-                //length is lower than the elements available at the top of the elements array - copy directly
                 for(; intoWritePos < length; intoWritePos++){
                     into[intoWritePos] = this.elements[this.readPos++];
                 }
 
                 return intoWritePos;
             } else {
-                //length is higher than elements available at the top of the elements array
-                //split copy into a copy from both top and bottom of elements array.
-
-                //copy from top
                 for(; this.readPos < capacity; this.readPos++){
                     into[intoWritePos++] = this.elements[this.readPos];
                 }
 
-                //copy from bottom
                 this.readPos = 0;
                 this.flipped = false;
+                // 比较剩余需要读的个数和剩余可读的个数
                 int endPos = Math.min(this.writePos, length - intoWritePos);
                 for(; this.readPos < endPos; this.readPos++){
                     into[intoWritePos++] = this.elements[this.readPos];
