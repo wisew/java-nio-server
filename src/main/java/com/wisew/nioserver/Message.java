@@ -76,7 +76,7 @@ public class Message {
         System.arraycopy(sharedArray,offset,content,0,length);
 
         String describe = String.format(
-                "==============================\n当前的缓冲区大小：%dKB\n当前的块大小：%dKB\n当前的offset：%dKB\n当前的length：%d\n当前的内容：%s\n当前socketId：%d\n==============================",
+                "==============================\ntotal=%dKB\nblock=%dKB\noffset=%dKB\nlength=%d\ncontent=%s\nsocketId=%d\n==============================",
                 sharedArray.length / 1024,
                 capacity / 1024,
                 offset / 1024,

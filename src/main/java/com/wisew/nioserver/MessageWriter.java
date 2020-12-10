@@ -22,6 +22,7 @@ public class MessageWriter {
         }
     }
 
+    // 写入的长度 > 该条message的长度如何处理
     public void write(Socket socket, ByteBuffer byteBuffer) throws IOException {
         byteBuffer.put(this.messageInProgress.sharedArray, this.messageInProgress.offset + this.bytesWritten, this.messageInProgress.length - this.bytesWritten);
         byteBuffer.flip();
@@ -37,6 +38,7 @@ public class MessageWriter {
                 //todo unregister from selector
             }
         }
+        this.bytesWritten = 0;
     }
 
     public boolean isEmpty() {
